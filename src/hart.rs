@@ -1,4 +1,4 @@
-use crate::decode::{decode_I, decode_S, decode_U};
+use crate::decode::{decode_I, decode_S, decode_U, decode_J};
 use crate::memory::Memory;
 
 /// Represents the state for a Hardware Thread in RISC-V. Includes all unprivilged architectual states
@@ -40,6 +40,7 @@ impl Hart {
                     4 => memory.lbu(addr),
                     _ => panic!()
                 };
+                self.regs[0] = 0;
             },
             35 /* STORE */ => {
                 let (_, width, base, src, offset) = decode_S(inst);
@@ -57,12 +58,27 @@ impl Hart {
                 let (_, dst, imm) = decode_U(inst);
                 // Lower 12 bits of IMM are already set to 0 from decoding
                 self.regs[dst as usize] = imm;
+                self.regs[0] = 0;
             },
             23 /* AUIPC */ => {
                 let (_, dst, imm) = decode_U(inst);
                 let value = self.pc + imm as u32;
                 self.regs[dst as usize] = value as i32;
+                self.regs[0] = 0;
             },
+            103 /* JALR */ => {
+                let (_, dst, target, _, offset) = decode_I(inst);
+                self.regs[dst as usize] = next_pc as i32;
+                let target = self.regs[target as usize] + offset as i32;
+                next_pc = target as u32 & !1;
+            },
+            111 /* JAL */ => {
+                let (_, dst, offset) = decode_J(inst);
+                self.regs[dst as usize] = next_pc as i32;
+                next_pc = (self.pc as i32 + offset) as u32;
+                // TODO Address alignment check
+                self.regs[0] = 0;
+            }
             _ => (),
         }
 
