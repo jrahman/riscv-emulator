@@ -1,4 +1,4 @@
-use crate::decode::{decode_I, decode_S, decode_U, decode_J};
+use crate::decode::{decode_I, decode_S, decode_U, decode_J, decode_B};
 use crate::memory::Memory;
 
 /// Represents the state for a Hardware Thread in RISC-V. Includes all unprivilged architectual states
@@ -65,6 +65,23 @@ impl Hart {
                 let value = self.pc + imm as u32;
                 self.regs[dst as usize] = value as i32;
                 self.regs[0] = 0;
+            },
+            99 /* BRANCH */ => {
+                let (_, rs1, rs2, cmp, offset) = decode_B(inst);
+                let lhs = self.regs[rs1 as usize];
+                let rhs = self.regs[rs2 as usize];
+                if match cmp {
+                    0 => lhs == rhs,
+                    1 => lhs != rhs,
+                    4 => lhs < rhs,
+                    5 => lhs >= rhs,
+                    6 => (lhs as u32) < rhs as u32,
+                    7 => lhs as u32 >= rhs as u32,
+                    _ => panic!()
+                } {
+                    // TODO Address alignment check
+                    next_pc = (self.pc as i32 + offset as i32) as u32;
+                }
             },
             103 /* JALR */ => {
                 let (_, dst, target, _, offset) = decode_I(inst);
