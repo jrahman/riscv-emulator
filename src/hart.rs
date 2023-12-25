@@ -1,4 +1,4 @@
-use crate::decode::{decode_I, decode_S};
+use crate::decode::{decode_I, decode_S, decode_U};
 use crate::memory::Memory;
 
 /// Represents the state for a Hardware Thread in RISC-V. Includes all unprivilged architectual states
@@ -26,6 +26,8 @@ impl Hart {
         // Assuming a 32-bit instruction, extract the opcode from the first 6 bits
         let opcode = inst & 63;
 
+        let mut next_pc = self.pc + 4;
+
         match opcode {
             3 /* LOAD */ => {
                 let (_, rd, width, base, offset) = decode_I(inst);
@@ -50,11 +52,21 @@ impl Hart {
                     2 => memory.sw(addr, src),
                     _ => panic!()
                 }
-            }
+            },
+            55 /* LUI */ => {
+                let (_, dst, imm) = decode_U(inst);
+                // Lower 12 bits of IMM are already set to 0 from decoding
+                self.regs[dst as usize] = imm;
+            },
+            23 /* AUIPC */ => {
+                let (_, dst, imm) = decode_U(inst);
+                let value = self.pc + imm as u32;
+                self.regs[dst as usize] = value as i32;
+            },
             _ => (),
         }
 
         // Advance PC to the next instruction we need to execute
-        self.pc += 4;
+        self.pc = next_pc;
     }
 }
