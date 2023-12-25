@@ -53,7 +53,7 @@ impl Memory {
 
     pub fn sb(&mut self, addr: u32, value: i8) {
         let addr = addr as usize;
-        self.physical_memory[addr..addr+1].copy_from_slice(&value.to_le_bytes());
+        self.physical_memory[addr..addr + 1].copy_from_slice(&value.to_le_bytes());
     }
 
     pub fn load_inst(&self, addr: u32) -> u32 {

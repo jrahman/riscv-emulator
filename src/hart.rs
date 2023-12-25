@@ -1,4 +1,4 @@
-use crate::decode::{decode_B, decode_I, decode_J, decode_S, decode_U, decode_R};
+use crate::decode::{decode_b, decode_i, decode_j, decode_r, decode_s, decode_u};
 use crate::memory::Memory;
 
 /// Represents the state for a Hardware Thread in RISC-V. Includes all unprivilged architectual states
@@ -30,7 +30,7 @@ impl Hart {
 
         match opcode {
             3 /* LOAD */ => {
-                let (_, rd, width, base, offset) = decode_I(inst);
+                let (_, rd, width, base, offset) = decode_i(inst);
                 let base = self.regs[base as usize];
                 let addr = unsafe { std::mem::transmute(base + offset as i32)};
                 self.regs[rd as usize] = match width {
@@ -43,7 +43,7 @@ impl Hart {
                 self.regs[0] = 0;
             },
             19 /* ALU Reg-Imm */ => {
-                let (_, dst, src, funct3, imm) = decode_I(inst);
+                let (_, dst, src, funct3, imm) = decode_i(inst);
                 let src = self.regs[src as usize];
                 self.regs[dst as usize ] = match funct3 {
                     0 /* ADDI */ => {
@@ -81,13 +81,13 @@ impl Hart {
                 self.regs[0] = 0;
             },
             23 /* AUIPC */ => {
-                let (_, dst, imm) = decode_U(inst);
+                let (_, dst, imm) = decode_u(inst);
                 let value = self.pc + imm as u32;
                 self.regs[dst as usize] = value as i32;
                 self.regs[0] = 0;
             },
             35 /* STORE */ => {
-                let (_, width, base, src, offset) = decode_S(inst);
+                let (_, width, base, src, offset) = decode_s(inst);
                 let src = self.regs[src as usize];
                 let base = self.regs[base as usize];
                 let addr = unsafe { std::mem::transmute(base + offset as i32)};
@@ -99,7 +99,7 @@ impl Hart {
                 }
             },
             51 /* ALU Reg-Reg */ => {
-                let (_, dst, src1, src2, funct3, funct7) = decode_R(inst);
+                let (_, dst, src1, src2, funct3, funct7) = decode_r(inst);
                 let src1 = self.regs[src1 as usize];
                 let src2 = self.regs[src2 as usize];
                 self.regs[dst as usize] = match funct3 {
@@ -140,13 +140,13 @@ impl Hart {
                 self.regs[0] = 0;
             },
             55 /* LUI */ => {
-                let (_, dst, imm) = decode_U(inst);
+                let (_, dst, imm) = decode_u(inst);
                 // Lower 12 bits of IMM are already set to 0 from decoding
                 self.regs[dst as usize] = imm;
                 self.regs[0] = 0;
             },
             99 /* BRANCH */ => {
-                let (_, rs1, rs2, cmp, offset) = decode_B(inst);
+                let (_, rs1, rs2, cmp, offset) = decode_b(inst);
                 let lhs = self.regs[rs1 as usize];
                 let rhs = self.regs[rs2 as usize];
                 if match cmp {
@@ -163,13 +163,13 @@ impl Hart {
                 }
             },
             103 /* JALR */ => {
-                let (_, dst, target, _, offset) = decode_I(inst);
+                let (_, dst, target, _, offset) = decode_i(inst);
                 self.regs[dst as usize] = next_pc as i32;
                 let target = self.regs[target as usize] + offset as i32;
                 next_pc = target as u32 & !1;
             },
             111 /* JAL */ => {
-                let (_, dst, offset) = decode_J(inst);
+                let (_, dst, offset) = decode_j(inst);
                 self.regs[dst as usize] = next_pc as i32;
                 next_pc = (self.pc as i32 + offset) as u32;
                 // TODO Address alignment check
