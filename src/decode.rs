@@ -3,6 +3,14 @@
 /// R, S, U, I, B, and J
 ///
 
+/// Instruction encoding for Reg-Reg instructions, with a pair of source
+/// registers and a destination register, along with 10 bits of sub-operation
+/// type values:
+/// 
+///  31      25 24    20 19    15 14    12 11     7 6      0
+/// |----------|--------|--------|--------|--------|--------|
+/// |  funct7  |  src2  |  src1  | funct3 |  dest  | opcode |   
+/// |----------|--------|--------|--------|--------|--------|
 pub fn decode_r(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
@@ -20,6 +28,14 @@ pub fn decode_r(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
     )
 }
 
+/// Instruction encoding for Store instructions, using a base address
+/// register, and immediate offset, and a source register to be written
+/// to memory:
+/// 
+///  31       25 24    20 19    15 14    12 11       7 6      0
+/// |-----------|--------|--------|--------|----------|--------|
+/// | imm[11:5] |  src2  |  src1  | funct3 | imm[4:0] | opcode |
+/// |-----------|--------|--------|--------|----------|--------|
 pub fn decode_s(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
     let imm1 = ((inst >> 7) & 31) as i16;
@@ -36,6 +52,14 @@ pub fn decode_s(inst: u32) -> (u8, u8, u8, u8, i16) {
     )
 }
 
+/// Instruction encoding for a Upper immediate instruction which is used for
+/// LUI and AUIPC instructions to build constants. Contains pieces of the
+/// immediate along with the destination register:
+/// 
+///  31                                      12 11       7 6      0
+/// |------------------------------------------|--------|----------|
+/// |                 imm[31:12]               |   dst  |  opcode  |
+/// |------------------------------------------|--------|----------|
 pub fn decode_u(inst: u32) -> (u8, u8, i32) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
@@ -43,6 +67,14 @@ pub fn decode_u(inst: u32) -> (u8, u8, i32) {
     (opcode as u8, rd as u8, (imm << 12) as i32)
 }
 
+/// Instruction encoding for Reg-Imm instructions that encodes a dest register,
+/// a source register, and a 12 bit immediate value (sign-extended) along with
+/// function sub-opcode:
+/// 
+///  31                   20 19    15 14    12 11     7 6      0
+/// |-----------------------|--------|--------|--------|--------|
+/// |        imm[11:0]      |  src1  | funct3 |  dest  | opcode |   
+/// |-----------------------|--------|--------|--------|--------|
 pub fn decode_i(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
     let rd: u32 = (inst >> 7) & 31;
@@ -52,6 +84,15 @@ pub fn decode_i(inst: u32) -> (u8, u8, u8, u8, i16) {
     (opcode as u8, rd as u8, rs1 as u8, funct3 as u8, imm as i16)
 }
 
+/// Instruction encoding for Branch instructions that encodes a src register,
+/// a target base register, and 12 bit immediate value (sign-extended) offset
+/// which is added to the target base register, and finally a funct3 values
+/// that determines how the source register is used for conditional branches:
+/// 
+///  31      30       25 24    20 19    15 14  12 11       8 7       6      0    
+/// |-------|-----------|--------|--------|------|----------|-------|--------|
+/// |imm[12]| imm[10:5] |  src2  |  src1  | fun3 | imm[4:1] |imm[11]| opcode | 
+/// |-------|-----------|--------|--------|------|----------|-------|--------|
 pub fn decode_b(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
     let rs1 = (inst >> 15) & 31;
@@ -70,6 +111,14 @@ pub fn decode_b(inst: u32) -> (u8, u8, u8, u8, i16) {
     )
 }
 
+/// Instruction encoding for Jump instructions, encodes a 20 bit immediate
+/// offset from the current PC, a destination register to save the current
+/// Program Counter register:
+/// 
+///  31        30             21 20        19        12 11     7 6        0
+/// |---------|-----------------|---------|------------|--------|----------|
+/// | imm[20] |    imm[10:1]    | imm[11] | imm[19:12] |  dest  |  opcode  |
+/// |---------|-----------------|---------|------------|--------|----------|
 pub fn decode_j(inst: u32) -> (u8, u8, i32) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
