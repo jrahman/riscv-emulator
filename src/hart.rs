@@ -1,4 +1,4 @@
-use crate::decode::{decode_I, decode_S, decode_U, decode_J, decode_B};
+use crate::decode::{decode_B, decode_I, decode_J, decode_S, decode_U, decode_R};
 use crate::memory::Memory;
 
 /// Represents the state for a Hardware Thread in RISC-V. Includes all unprivilged architectual states
@@ -42,6 +42,50 @@ impl Hart {
                 };
                 self.regs[0] = 0;
             },
+            19 /* ALU Reg-Imm */ => {
+                let (_, dst, src, funct3, imm) = decode_I(inst);
+                let src = self.regs[src as usize];
+                self.regs[dst as usize ] = match funct3 {
+                    0 /* ADDI */ => {
+                        src + imm as i32
+                    },
+                    1 /* SLLI */ => {
+                        src << (imm as i32 & 31)
+                    },
+                    2 /* SLTI */ => {
+                        if src < imm as i32 { 1 } else { 0 }
+                    },
+                    3 /* SLTIU */ => {
+                        if (src as u32) < imm as u32 { 1 } else { 0 }
+                    },
+                    4 /* XORI */ => {
+                        src ^ imm as i32
+                    },
+                    6 /* ORI */ => {
+                        src | imm as i32
+                    },
+                    7 /* ANDI */ => {
+                        src & imm as i32
+                    },
+                    5 /* SR*I */ => {
+                        if imm >> 5 == 64 {
+                            // Arithmetic right shift
+                            src >> (imm as i32 & 31)
+                        } else {
+                            // Logical right shift
+                            (src as u32 >> (imm as i32 & 31)) as i32
+                        }
+                    },
+                    _ => panic!()
+                };
+                self.regs[0] = 0;
+            },
+            23 /* AUIPC */ => {
+                let (_, dst, imm) = decode_U(inst);
+                let value = self.pc + imm as u32;
+                self.regs[dst as usize] = value as i32;
+                self.regs[0] = 0;
+            },
             35 /* STORE */ => {
                 let (_, width, base, src, offset) = decode_S(inst);
                 let src = self.regs[src as usize];
@@ -54,16 +98,51 @@ impl Hart {
                     _ => panic!()
                 }
             },
+            51 /* ALU Reg-Reg */ => {
+                let (_, dst, src1, src2, funct3, funct7) = decode_R(inst);
+                let src1 = self.regs[src1 as usize];
+                let src2 = self.regs[src2 as usize];
+                self.regs[dst as usize] = match funct3 {
+                    0 /* ADD/SUB */ => {
+                        if funct7 == 0 {
+                            src1 + src2
+                        } else {
+                            src1 - src2
+                        }
+                    },
+                    1 /* SLL */ => {
+                        src1 << (src2 & 31)
+                    },
+                    2 /* SLT */ => {
+                        if src1 < src2 { 1 } else { 0 }
+                    },
+                    3 /* SLTU */ => {
+                        if (src1 as u32) < src2 as u32 { 1 } else { 0 }
+                    },
+                    4 /* XOR */ => {
+                        src1 ^ src2
+                    },
+                    5 /* SR* */ => {
+                        if funct7 == 0 {
+                            ((src1 as u32) >> (src2 & 31)) as i32
+                        } else {
+                            src1 >> (src2 & 31)
+                        }
+                    },
+                    6 /* OR */=> {
+                        src1 | src2
+                    },
+                    7 /* AND */ => {
+                        src1 & src2
+                    },
+                    _ => panic!()
+                };
+                self.regs[0] = 0;
+            },
             55 /* LUI */ => {
                 let (_, dst, imm) = decode_U(inst);
                 // Lower 12 bits of IMM are already set to 0 from decoding
                 self.regs[dst as usize] = imm;
-                self.regs[0] = 0;
-            },
-            23 /* AUIPC */ => {
-                let (_, dst, imm) = decode_U(inst);
-                let value = self.pc + imm as u32;
-                self.regs[dst as usize] = value as i32;
                 self.regs[0] = 0;
             },
             99 /* BRANCH */ => {
