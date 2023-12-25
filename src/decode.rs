@@ -4,7 +4,7 @@
 ///
 
 fn decode_R(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
     let rs2 = (inst >> 20) & 31;
@@ -21,7 +21,7 @@ fn decode_R(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
 }
 
 fn decode_S(inst: u32) -> (u8, u8, u8, u16) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let imm1 = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
     let rs2 = (inst >> 20) & 31;
@@ -35,14 +35,14 @@ fn decode_S(inst: u32) -> (u8, u8, u8, u16) {
 }
 
 fn decode_U(inst: u32) -> (u8, u8, u32) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
     let imm = (inst >> 12);
     (opcode as u8, rd as u8, imm as u32)
 }
 
 fn decode_I(inst: u32) -> (u8, u8, u8, u8, u16) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let rd: u32 = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
     let funct3 = (inst >> 12) & 7;
@@ -51,7 +51,7 @@ fn decode_I(inst: u32) -> (u8, u8, u8, u8, u16) {
 }
 
 fn decode_B(inst: u32) -> (u8, u8, u8, u8, u32) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let rs1 = (inst >> 15) & 31;
     let rs2 = (inst >> 20) & 31;
     let imm1 = (inst >> 7) & 1;
@@ -69,7 +69,7 @@ fn decode_B(inst: u32) -> (u8, u8, u8, u8, u32) {
 }
 
 fn decode_J(inst: u32) -> (u8, u8, u32) {
-    let opcode = inst & 63;
+    let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
     let imm1 = (inst >> 12) & 511;
     let imm2 = (inst >> 20) & 1;
