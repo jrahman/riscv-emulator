@@ -3,7 +3,7 @@
 /// R, S, U, I, B, and J
 ///
 
-fn decode_R(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
+pub fn decode_R(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
@@ -20,44 +20,46 @@ fn decode_R(inst: u32) -> (u8, u8, u8, u8, u8, u8) {
     )
 }
 
-fn decode_S(inst: u32) -> (u8, u8, u8, u16) {
+pub fn decode_S(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
-    let imm1 = (inst >> 7) & 31;
+    let imm1 = ((inst >> 7) & 31) as i16;
+    let funct3 = (inst >> 12) & 7;
     let rs1 = (inst >> 15) & 31;
     let rs2 = (inst >> 20) & 31;
-    let imm2 = (inst >> 25) & 127;
+    let imm2 = ((inst >> 25) & 127) as i16;
     (
         opcode as u8,
+        funct3 as u8,
         rs1 as u8,
         rs2 as u8,
-        (imm2 as u16) << 5 | (imm1 as u16),
+        imm2 << 5 | imm1,
     )
 }
 
-fn decode_U(inst: u32) -> (u8, u8, u32) {
+fn decode_U(inst: u32) -> (u8, u8, i32) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
     let imm = (inst >> 12);
-    (opcode as u8, rd as u8, imm as u32)
+    (opcode as u8, rd as u8, (imm << 12) as i32)
 }
 
-fn decode_I(inst: u32) -> (u8, u8, u8, u8, u16) {
+pub fn decode_I(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
     let rd: u32 = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
     let funct3 = (inst >> 12) & 7;
     let imm = inst >> 25;
-    (opcode as u8, rd as u8, rs1 as u8, funct3 as u8, imm as u16)
+    (opcode as u8, rd as u8, rs1 as u8, funct3 as u8, imm as i16)
 }
 
-fn decode_B(inst: u32) -> (u8, u8, u8, u8, u32) {
+pub fn decode_B(inst: u32) -> (u8, u8, u8, u8, i16) {
     let opcode = inst & 127;
     let rs1 = (inst >> 15) & 31;
     let rs2 = (inst >> 20) & 31;
-    let imm1 = (inst >> 7) & 1;
-    let imm2 = (inst >> 8) & 15;
-    let imm3 = (inst >> 25) & 63;
-    let imm4 = (inst >> 31) & 1;
+    let imm1 = ((inst >> 7) & 1) as i16;
+    let imm2 = ((inst >> 8) & 15) as i16;
+    let imm3 = ((inst >> 25) & 63) as i16;
+    let imm4 = ((inst >> 31) & 1) as i16;
     let funct3 = (inst >> 12) & 7;
     (
         opcode as u8,
@@ -68,13 +70,13 @@ fn decode_B(inst: u32) -> (u8, u8, u8, u8, u32) {
     )
 }
 
-fn decode_J(inst: u32) -> (u8, u8, u32) {
+pub fn decode_J(inst: u32) -> (u8, u8, i16) {
     let opcode = inst & 127;
     let rd = (inst >> 7) & 31;
-    let imm1 = (inst >> 12) & 511;
-    let imm2 = (inst >> 20) & 1;
-    let imm3 = (inst >> 21) & 1023;
-    let imm4 = (inst >> 31);
+    let imm1 = ((inst >> 12) & 511) as i16;
+    let imm2 = ((inst >> 20) & 1) as i16;
+    let imm3 = ((inst >> 21) & 1023) as i16;
+    let imm4 = (inst >> 31) as i16;
     (
         opcode as u8,
         rd as u8,

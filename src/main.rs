@@ -3,6 +3,7 @@ use memory::Memory;
 
 mod hart;
 mod memory;
+mod decode;
 
 fn main() {
 
