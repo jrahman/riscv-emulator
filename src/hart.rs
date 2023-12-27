@@ -190,7 +190,7 @@ impl Hart {
 mod test {
     use crate::{
         decode::{encode_b, encode_i, encode_j, encode_r},
-        memory::Memory,
+        memory::Memory, assembler::AluOps,
     };
 
     use super::{Hart, OpCode};
@@ -638,7 +638,7 @@ mod test {
             for dest in (1..32).filter(|v| *v != src) {
                 for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
                     let inst =
-                        encode_i(OpCode::REG_IMM as u8, dest, src, 0b010 /* SLT */, imm);
+                        encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLT as u8, imm);
 
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
@@ -659,13 +659,42 @@ mod test {
     }
 
     #[test]
+    fn sltu_reg_imm() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src in 1..32 {
+            for dest in (1..32).filter(|v| *v != src) {
+                for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
+                    let inst =
+                        encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLTU as u8, imm);
+
+                    memory.sw(128, inst as i32);
+                    hart.pc = 128;
+
+                    hart.regs[dest as usize] = 2;
+                    hart.regs[src as usize] = reg;
+
+                    hart.execute(&mut memory);
+
+                    assert_eq!(reg, hart.regs[src as usize]);
+                    assert_eq!(
+                        hart.regs[dest as usize],
+                        if (reg as u32) < imm as u32 { 1 } else { 0 }
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn add_reg_imm() {
         let mut memory = Memory::new();
         let mut hart = Hart::new();
 
         for src in 1..32 {
             for dest in (1..32).filter(|v| *v != src) {
-                let inst = encode_i(OpCode::REG_IMM as u8, dest, src, 0b000 /* ADD */, 100);
+                let inst = encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::ADD as u8, 100);
                 memory.sw(128, inst as i32);
                 hart.pc = 128;
 
@@ -689,7 +718,7 @@ mod test {
         for src1 in 1..32 {
             for src2 in src1 + 1..32 {
                 for dest in (1..32).filter(|v| *v != src1 && *v != src2) {
-                    let inst = encode_r(OpCode::REG_REG as u8, dest, 0, src1, src2, 0);
+                    let inst = encode_r(OpCode::REG_REG as u8, dest, AluOps::ADD as u8, src1, src2, 0);
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
 

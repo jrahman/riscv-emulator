@@ -196,6 +196,18 @@ macro_rules! xor {
     };
 }
 
+macro_rules! slt {
+    ($($args:tt)*) => {
+        alu!($($args)*, $crate::assembler::AluOps::SLT)
+    };
+}
+
+macro_rules! sltu {
+    ($($args:tt)*) => {
+        alu!($($args)*, $crate::assembler::AluOps::SLTU)
+    };
+}
+
 macro_rules! jal {
     ($rd:ident, $offset:literal) => {
         $crate::decode::encode_j(
@@ -239,6 +251,30 @@ macro_rules! beq {
             0b000,
             $offset,
         )
+    };
+}
+
+macro_rules! seqz {
+    ($rd:ident, $rs:ident) => {
+        sltu!($rd, $rs, 1)
+    };
+}
+
+macro_rules! sneqz {
+    ($rd:ident, $rs:ident) => {
+        sltu!($rd, x0, $rs)
+    };
+}
+
+macro_rules! sltz {
+    ($rd:ident, $rs:ident) => {
+        slt!($rd, $rs, x0)
+    };
+}
+
+macro_rules! sgtz {
+    ($rd:ident, $rs:ident) => {
+        slt!($rd, x0, $rs)
     };
 }
 
@@ -301,7 +337,19 @@ mod test {
 
         beq!(x0, x1, -12);
 
+        slt!(x1, x0, -2);
+        slt!(x1, x22, x20);
+
+        sltu!(x1, x0, -2);
+        sltu!(x1, x22, x20);
+
         sub!(x19, x21, x30);
+
+        seqz!(x1, x2);
+        sneqz!(x2, x17);
+
+        sltz!(x29, x4);
+        sgtz!(x23, x11);
 
         mv!(x5, x3);
 
