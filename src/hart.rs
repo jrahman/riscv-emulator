@@ -202,7 +202,6 @@ impl Hart {
             OpCode::JAL /* JAL */ => {
                 let (_, dst, offset) = decode_j(inst);
                 self.regs[dst as usize] = next_pc as i32;
-                println!("Offset: {} -> {}", offset, self.pc as i32);
                 next_pc = (self.pc as i32 + offset) as u32;
                 // TODO Address alignment check
                 self.regs[0] = 0;
@@ -225,7 +224,7 @@ mod test {
     use super::{Hart, OpCode};
 
     #[test]
-    fn jmp() {
+    fn jal() {
         let mut memory = Memory::new();
         let mut hart = Hart::new();
 
@@ -240,6 +239,36 @@ mod test {
 
                 assert_eq!(hart.pc, (1024 + offset) as u32);
                 assert_eq!(hart.regs[dest as usize], 1028);
+            }
+        }
+    }
+
+    #[test]
+    fn jalr() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for dest in 1..32 {
+            for src in (1..32).filter(|v| *v != dest) {
+                for target in (0..8i32 * 1024).filter(|v| v & 3 == 0) {
+                    for offset in [
+                        -2048, -1167, -1024, -5, -4, 0, 1, 2, 3, 4, 16, 17, 1024, 2047,
+                    ]
+                    .iter()
+                    .filter(|v| **v >= target)
+                    {
+                        let inst = encode_i(OpCode::JALR as u8, dest, src, 0, *offset as i16);
+
+                        memory.sw(1024, inst as i32);
+                        hart.pc = 1024;
+                        hart.regs[src as usize] = target;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.pc, (target + offset) as u32 & !1u32);
+                        assert_eq!(hart.regs[dest as usize], 1028);
+                    }
+                }
             }
         }
     }

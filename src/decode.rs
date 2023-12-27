@@ -89,16 +89,19 @@ pub fn decode_i(inst: u32) -> (u8, u8, u8, u8, i16) {
     let rd: u32 = (inst >> 7) & 31;
     let rs1 = (inst >> 15) & 31;
     let funct3 = (inst >> 12) & 7;
-    let imm = inst >> 25;
+    let imm = inst >> 20;
+    let imm = ((imm as i32) << 20) >> 20;
+    // println!("Imm: {}", imm as i16);
     (opcode as u8, rd as u8, rs1 as u8, funct3 as u8, imm as i16)
 }
 
 pub fn encode_i(opcode: u8, dest: u8, src: u8, funct3: u8, imm: i16) -> u32 {
+    // println!("Encoding {}", imm);
     (opcode as u32 & 127)
         | ((dest as u32) << 7)
         | ((src as u32 & 31) << 15)
         | ((funct3 as u32 & 7) << 12)
-        | ((imm as u32) << 25)
+        | ((imm as u32) << 20)
 }
 
 /// Instruction encoding for Branch instructions that encodes a src register,
