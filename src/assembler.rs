@@ -1,6 +1,11 @@
-use crate::decode;
+macro_rules! asm {
+    ($($inst:ident!($($arg:tt),*)),*) => {{
+        let mut insts: Vec<u8> = vec![];
 
-use crate::decode::encode_r;
+        $(insts.extend_from_slice(&u32::to_le_bytes($inst!($($arg),*))););*;
+        insts
+    }};
+}
 
 #[repr(u8)]
 pub enum OpCode {
@@ -154,7 +159,7 @@ macro_rules! alu {
             0,
         )
     };
-    ($dest:ident, $src1:ident, $imm:expr, $op:expr) => {
+    ($dest:ident, $src1:ident, $imm:literal, $op:expr) => {
         $crate::decode::encode_i(
             $crate::assembler::OpCode::REG_IMM as u8,
             register!($dest),
@@ -192,20 +197,20 @@ macro_rules! xor {
 }
 
 macro_rules! jal {
-    ($rd:ident, $offset:expr) => {
+    ($rd:ident, $offset:literal) => {
         $crate::decode::encode_j(
             $crate::assembler::OpCode::JAL as u8,
             register!($rd),
             $offset,
         )
     };
-    ($offset:expr) => {
+    ($offset:literal) => {
         $crate::decode::encode_j($crate::assembler::OpCode::JAL as u8, register!(x1), $offset)
     };
 }
 
 macro_rules! jalr {
-    ($rd:ident, $rs1:ident, $offset:expr) => {
+    ($rd:ident, $rs1:ident, $offset:literal) => {
         $crate::decode::encode_i(
             $crate::assembler::OpCode::JALR as u8,
             register!($rd),
@@ -214,13 +219,25 @@ macro_rules! jalr {
             $offset,
         )
     };
-    ($rs1:expr) => {
+    ($rs1:ident) => {
         $crate::decode::encode_i(
             $crate::assembler::OpCode::JALR as u8,
             register!(x1),
             register!($rs1),
             0,
             0,
+        )
+    };
+}
+
+macro_rules! beq {
+    ($rs1:ident, $rs2:ident, $offset:literal) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b000,
+            $offset,
         )
     };
 }
@@ -250,7 +267,7 @@ macro_rules! neg {
 }
 
 macro_rules! j {
-    ($offset:expr) => {
+    ($offset:literal) => {
         jal!(x0, $offset)
     };
 }
@@ -282,6 +299,8 @@ mod test {
 
         jal!(x5, 1234);
 
+        beq!(x0, x1, -12);
+
         sub!(x19, x21, x30);
 
         mv!(x5, x3);
@@ -297,5 +316,7 @@ mod test {
         jr!(x5);
 
         ret!();
+
+        asm!(add!(x1, x4, 3), nop!(), nop!(), not!(x1, x1));
     }
 }
