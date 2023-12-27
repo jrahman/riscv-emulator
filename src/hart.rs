@@ -31,7 +31,7 @@ impl Hart {
 
         match opcode {
             OpCode::LOAD /* LOAD */ => {
-                let (_, rd, width, base, offset) = decode_i(inst);
+                let (_, rd, base, width, offset) = decode_i(inst);
                 let base = self.regs[base as usize];
                 let addr = unsafe { std::mem::transmute(base + offset as i32)};
                 self.regs[rd as usize] = match width {
@@ -582,7 +582,44 @@ mod test {
     }
 
     #[test]
-    fn alu_add_reg_imm() {
+    fn store() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for dst in 1..31 {
+            for src1 in (1..31).filter(|v| *v != dst) {
+                for offset in -2048..2047 {
+                    // Load Byte
+                    let inst = encode_i(OpCode::LOAD as u8, dst, src1, 0b000, offset);
+                    memory.sw(16*1024, inst as i32);
+                    memory.sb((4096 + offset) as u32, (dst + src1) as i8);
+                    hart.regs[src1 as usize] = 4096;
+                    hart.pc = 16*1024;
+
+                    hart.execute(&mut memory);
+
+                    assert_eq!(dst + src1, hart.regs[dst as usize] as u8);
+                    assert_eq!(hart.regs[src1 as usize], 4096);
+
+                    // Load Half-word
+                    let inst = encode_i(OpCode::LOAD as u8, dst, src1, 0b001, offset);
+                    memory.sw(16*1024, inst as i32);
+                    memory.sh((4096 + offset) as u32, 2*(dst + src1) as i16);
+                    hart.regs[src1 as usize] = 4096;
+                    hart.pc = 16*1024;
+
+                    hart.execute(&mut memory);
+
+                    assert_eq!(2*(dst + src1), hart.regs[dst as usize] as u8);
+                    assert_eq!(hart.regs[src1 as usize], 4096);
+                }
+            }
+        }
+
+    }
+
+    #[test]
+    fn add_reg_imm() {
         let mut memory = Memory::new();
         let mut hart = Hart::new();
 
@@ -605,7 +642,7 @@ mod test {
     }
 
     #[test]
-    fn alu_add_reg_reg() {
+    fn add_reg_reg() {
         let mut memory = Memory::new();
         let mut hart = Hart::new();
 
