@@ -637,7 +637,8 @@ mod test {
         for src in 1..32 {
             for dest in (1..32).filter(|v| *v != src) {
                 for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
-                    let inst = encode_i(OpCode::REG_IMM as u8, dest, src, 0b010 /* SLT */, imm);
+                    let inst =
+                        encode_i(OpCode::REG_IMM as u8, dest, src, 0b010 /* SLT */, imm);
 
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
@@ -648,7 +649,10 @@ mod test {
                     hart.execute(&mut memory);
 
                     assert_eq!(reg, hart.regs[src as usize]);
-                    assert_eq!(hart.regs[dest as usize], if reg < imm.into() { 1 } else { 0 });
+                    assert_eq!(
+                        hart.regs[dest as usize],
+                        if reg < imm.into() { 1 } else { 0 }
+                    );
                 }
             }
         }
