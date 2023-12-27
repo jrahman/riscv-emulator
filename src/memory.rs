@@ -14,7 +14,7 @@ impl Memory {
 
     pub fn lw(&self, addr: u32) -> i32 {
         let addr = addr as usize;
-        i32::from_le_bytes(self.physical_memory[addr..addr + 8].try_into().unwrap())
+        i32::from_le_bytes(self.physical_memory[addr..addr + 4].try_into().unwrap())
     }
 
     pub fn lh(&self, addr: u32) -> i32 {

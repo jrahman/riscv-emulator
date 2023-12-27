@@ -610,7 +610,7 @@ mod test {
 
                     hart.execute(&mut memory);
 
-                    assert_eq!(2 * (dst + src1), hart.regs[dst as usize] as u8);
+                    assert_eq!(dst + src1, hart.regs[dst as usize] as u8);
                     assert_eq!(hart.regs[src1 as usize], 4096);
 
                     // Load Half-word
@@ -630,13 +630,38 @@ mod test {
     }
 
     #[test]
+    fn slt_reg_imm() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src in 1..32 {
+            for dest in (1..32).filter(|v| *v != src) {
+                for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
+                    let inst = encode_i(OpCode::REG_IMM as u8, dest, src, 0b010 /* SLT */, imm);
+
+                    memory.sw(128, inst as i32);
+                    hart.pc = 128;
+
+                    hart.regs[dest as usize] = 2;
+                    hart.regs[src as usize] = reg;
+
+                    hart.execute(&mut memory);
+
+                    assert_eq!(reg, hart.regs[src as usize]);
+                    assert_eq!(hart.regs[dest as usize], if reg < imm.into() { 1 } else { 0 });
+                }
+            }
+        }
+    }
+
+    #[test]
     fn add_reg_imm() {
         let mut memory = Memory::new();
         let mut hart = Hart::new();
 
         for src in 1..32 {
             for dest in (1..32).filter(|v| *v != src) {
-                let inst = encode_i(OpCode::REG_IMM as u8, dest, src, 0 /* ADD */, 100);
+                let inst = encode_i(OpCode::REG_IMM as u8, dest, src, 0b000 /* ADD */, 100);
                 memory.sw(128, inst as i32);
                 hart.pc = 128;
 
