@@ -180,6 +180,7 @@ impl Hart {
                 let (_, rs1, rs2, cmp, offset) = decode_b(inst);
                 let lhs = self.regs[rs1 as usize];
                 let rhs = self.regs[rs2 as usize];
+
                 if match cmp {
                     0 => lhs == rhs,
                     1 => lhs != rhs,
@@ -217,7 +218,7 @@ impl Hart {
 #[cfg(test)]
 mod test {
     use crate::{
-        decode::{encode_i, encode_j, encode_r},
+        decode::{encode_b, encode_i, encode_j, encode_r},
         memory::Memory,
     };
 
@@ -267,6 +268,50 @@ mod test {
 
                         assert_eq!(hart.pc, (target + offset) as u32 & !1u32);
                         assert_eq!(hart.regs[dest as usize], 1028);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn beq() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                    ] {
+                        let inst =
+                            encode_b(OpCode::BRANCH as u8, src1, src2, 0 /* BEQ */, offset);
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if lhs == rhs {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            }
+                        , "Failed with: {} ?= {} -> {}", lhs, rhs, offset);
                     }
                 }
             }
