@@ -259,12 +259,20 @@ mod test {
                         (1, 1),
                         (-1, -1),
                         (0, 0),
+                        (1, -1),
+                        (2, -1),
                         (i32::MAX, i32::MAX),
                         (i32::MIN, i32::MIN),
                         (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
                     ] {
-                        let inst =
-                            encode_b(OpCode::BRANCH as u8, src1, src2, 0 /* BEQ */, offset);
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b000, /* BEQ */
+                            offset,
+                        );
                         memory.sw(4096, inst as i32);
                         hart.pc = 4096;
 
@@ -281,8 +289,292 @@ mod test {
                                 (4096 + offset) as u32
                             } else {
                                 4100
-                            }
-                        , "Failed with: {} ?= {} -> {}", lhs, rhs, offset);
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bne() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (1, -1),
+                        (2, -1),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
+                    ] {
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b001, /* BNE */
+                            offset,
+                        );
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if lhs != rhs {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn blt() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (1, -1),
+                        (2, -1),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
+                    ] {
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b100, /* BLT */
+                            offset,
+                        );
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if lhs < rhs {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bge() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (1, -1),
+                        (2, -1),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
+                    ] {
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b101, /* BGE */
+                            offset,
+                        );
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if lhs >= rhs {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bltu() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (1, -1),
+                        (2, -1),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
+                    ] {
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b110, /* BLTU */
+                            offset,
+                        );
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if (lhs as u32) < rhs as u32 {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bgeu() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for offset in [-4096, -2048, -1024, -1024, -510, -4, 0, 4, 124, 1024, 2048] {
+                    for (lhs, rhs) in [
+                        (0, 1),
+                        (-1, 1),
+                        (1, 1),
+                        (-1, -1),
+                        (0, 0),
+                        (1, -1),
+                        (2, -1),
+                        (i32::MAX, i32::MAX),
+                        (i32::MIN, i32::MIN),
+                        (i32::MIN, i32::MAX),
+                        (i32::MAX, i32::MIN),
+                    ] {
+                        let inst = encode_b(
+                            OpCode::BRANCH as u8,
+                            src1,
+                            src2,
+                            0b111, /* BGEU */
+                            offset,
+                        );
+                        memory.sw(4096, inst as i32);
+                        hart.pc = 4096;
+
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(
+                            hart.pc,
+                            if (lhs as u32) >= rhs as u32 {
+                                (4096 + offset) as u32
+                            } else {
+                                4100
+                            },
+                            "Failed with: {} ?= {} -> {}",
+                            lhs,
+                            rhs,
+                            offset
+                        );
                     }
                 }
             }

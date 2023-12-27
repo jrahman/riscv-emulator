@@ -118,14 +118,14 @@ pub fn decode_b(inst: u32) -> (u8, u8, u8, u8, i16) {
     let imm1 = ((inst >> 7) & 1) as i32;
     let imm2 = ((inst >> 8) & 15) as i32;
     let imm3 = ((inst >> 25) & 63) as i32;
-    let imm4 = ((inst as i32 >> 31)) as i32;
+    let imm4 = (inst as i32 >> 31) as i32;
     let funct3 = (inst >> 12) & 7;
     (
         opcode as u8,
         rs1 as u8,
         rs2 as u8,
         funct3 as u8,
-        (imm2 << 1 | imm3 << 5 | imm1 << 11 | imm4 << 12) as i16
+        (imm2 << 1 | imm3 << 5 | imm1 << 11 | imm4 << 12) as i16,
     )
 }
 

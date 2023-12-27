@@ -1,10 +1,10 @@
 use hart::Hart;
 use memory::Memory;
 
+mod assembler;
 mod decode;
 mod hart;
 mod memory;
-mod assembler;
 
 fn main() {
     let mut memory = Memory::new();
