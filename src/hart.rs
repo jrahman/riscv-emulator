@@ -1,3 +1,4 @@
+use crate::assembler::OpCode;
 use crate::decode::{decode_b, decode_i, decode_j, decode_r, decode_s, decode_u};
 use crate::memory::Memory;
 
@@ -9,36 +10,6 @@ pub struct Hart {
 
     // Array of all 32 General purpose registers. For uniformity, we include x0 in the array, but handle it specially on access
     regs: [i32; 32],
-}
-
-#[repr(u8)]
-enum OpCode {
-    LOAD = 3,
-    REG_IMM = 19,
-    AUIPC = 23,
-    STORE = 35,
-    REG_REG = 51,
-    LUI = 55,
-    BRANCH = 99,
-    JALR = 103,
-    JAL = 111,
-}
-
-impl From<u8> for OpCode {
-    fn from(value: u8) -> Self {
-        match value {
-            3 => Self::LOAD,
-            19 => Self::REG_IMM,
-            23 => Self::AUIPC,
-            35 => Self::STORE,
-            51 => Self::REG_REG,
-            55 => Self::LUI,
-            99 => Self::BRANCH,
-            103 => Self::JALR,
-            111 => Self::JAL,
-            _ => panic!(),
-        }
-    }
 }
 
 impl Hart {
