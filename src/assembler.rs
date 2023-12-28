@@ -2,7 +2,7 @@ macro_rules! asm {
     ($($inst:ident!($($arg:tt),*)),*) => {{
         let mut insts: Vec<u8> = vec![];
 
-        $(insts.extend_from_slice(&u32::to_le_bytes($inst!($($arg),*))););*;
+        $(insts.extend_from_slice(&$inst!($($arg),*)););*;
         insts
     }};
 }
@@ -158,8 +158,9 @@ macro_rules! alu {
             register!($src2),
             0,
         )
+        .to_le_bytes()
     };
-    ($dest:ident, $src1:ident, $imm:literal, $op:expr) => {
+    ($dest:ident, $src1:ident, $imm:expr, $op:expr) => {
         $crate::decode::encode_i(
             $crate::assembler::OpCode::REG_IMM as u8,
             register!($dest),
@@ -167,6 +168,7 @@ macro_rules! alu {
             $op as u8,
             $imm,
         )
+        .to_le_bytes()
     };
 }
 
@@ -187,6 +189,7 @@ macro_rules! sub {
             register!($src2),
             0b0100000,
         )
+        .to_le_bytes()
     };
 }
 
@@ -221,20 +224,22 @@ macro_rules! sltu {
 }
 
 macro_rules! jal {
-    ($rd:ident, $offset:literal) => {
+    ($rd:ident, $offset:expr) => {
         $crate::decode::encode_j(
             $crate::assembler::OpCode::JAL as u8,
             register!($rd),
             $offset,
         )
+        .to_le_bytes()
     };
-    ($offset:literal) => {
+    ($offset:expr) => {
         $crate::decode::encode_j($crate::assembler::OpCode::JAL as u8, register!(x1), $offset)
+            .to_le_bytes()
     };
 }
 
 macro_rules! jalr {
-    ($rd:ident, $rs1:ident, $offset:literal) => {
+    ($rd:ident, $rs1:ident, $offset:expr) => {
         $crate::decode::encode_i(
             $crate::assembler::OpCode::JALR as u8,
             register!($rd),
@@ -242,6 +247,7 @@ macro_rules! jalr {
             0,
             $offset,
         )
+        .to_le_bytes()
     };
     ($rs1:ident) => {
         $crate::decode::encode_i(
@@ -251,11 +257,12 @@ macro_rules! jalr {
             0,
             0,
         )
+        .to_le_bytes()
     };
 }
 
 macro_rules! beq {
-    ($rs1:ident, $rs2:ident, $offset:literal) => {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
             $crate::assembler::OpCode::BRANCH as u8,
             register!($rs1),
@@ -263,6 +270,7 @@ macro_rules! beq {
             0b000,
             $offset,
         )
+        .to_le_bytes()
     };
 }
 
@@ -314,8 +322,19 @@ macro_rules! neg {
     };
 }
 
+macro_rules! auipc {
+    ($rd:ident, $offset:expr) => {
+        $crate::decode::encode_u(
+            $crate::assembler::OpCode::AUIPC as u8,
+            register!($rd),
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
 macro_rules! j {
-    ($offset:literal) => {
+    ($offset:expr) => {
         jal!(x0, $offset)
     };
 }
@@ -332,6 +351,14 @@ macro_rules! ret {
     };
 }
 
+macro_rules! call {
+    ($offset:expr) => {{
+        let mut inst = u32::from_le_bytes(auipc!(x1, (($offset) as u32 >> 20) as i32 + (($offset) as i32) & (1 << 11))) as u64;
+        inst |= (u32::from_le_bytes(jalr!(x1, x1, ($offset) & 0b111111111111)) as u64) << 32;
+        inst.to_le_bytes()
+    }};
+}
+
 #[cfg(test)]
 mod test {
 
@@ -339,50 +366,52 @@ mod test {
     /// both Reg-Imm and Reg-Reg forms of 3 Reg instructions
     #[test]
     fn generate() {
-        add!(x1, x2, x5);
-        add!(x2, x0, 15);
+        asm! {
+            add!(x1, x2, x5),
+        add!(x2, x0, 15),
 
-        xor!(x6, x28, x4);
-        xor!(x9, x25, 19);
+        xor!(x6, x28, x4),
+        xor!(x9, x25, 19),
 
-        or!(x19, x31, x2);
-        or!(x12, x18, 9);
+        or!(x19, x31, x2),
+        or!(x12, x18, 9),
 
-        and!(x8, x25, x12);
-        and!(x1, x29, 5);
+        and!(x8, x25, x12),
+        and!(x1, x29, 5),
 
-        jal!(x5, 1234);
+        jal!(x5, 1234),
 
-        beq!(x0, x1, -12);
+        beq!(x0, x1, 12),
 
-        slt!(x1, x0, -2);
-        slt!(x1, x22, x20);
+        slt!(x1, x0, 2),
+        slt!(x1, x22, x20),
 
-        sltu!(x1, x0, -2);
-        sltu!(x1, x22, x20);
+        sltu!(x1, x0, 2),
+        sltu!(x1, x22, x20),
 
-        sub!(x19, x21, x30);
+        sub!(x19, x21, x30),
 
-        seqz!(x1, x2);
-        sneqz!(x2, x17);
+        seqz!(x1, x2),
+        sneqz!(x2, x17),
 
-        sltz!(x29, x4);
-        sgtz!(x23, x11);
+        sltz!(x29, x4),
+        sgtz!(x23, x11),
 
-        mv!(x5, x3);
+        mv!(x5, x3),
 
-        nop!();
+        nop!(),
 
-        not!(x5, x12);
+        not!(x5, x12),
 
-        neg!(x1, x27);
+        neg!(x1, x27),
 
-        j!(1028);
+        j!(1028),
 
-        jr!(x5);
+        jr!(x5),
 
-        ret!();
+        call!(16),
 
-        asm!(add!(x1, x4, 3), nop!(), nop!(), not!(x1, x1));
+        ret!()
+        };
     }
 }
