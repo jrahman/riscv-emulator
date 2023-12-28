@@ -2,7 +2,8 @@ use hart::Hart;
 use memory::Memory;
 
 #[macro_use]
-mod assembler;
+mod assembly;
+
 mod decode;
 mod hart;
 mod memory;

@@ -1,4 +1,4 @@
-use crate::assembler::OpCode;
+use crate::assembly::assembler::OpCode;
 use crate::decode::{decode_b, decode_i, decode_j, decode_r, decode_s, decode_u};
 use crate::memory::Memory;
 
@@ -189,7 +189,7 @@ impl Hart {
 #[cfg(test)]
 mod test {
     use crate::{
-        assembler::AluOps,
+        assembly::assembler::AluOps,
         decode::{encode_b, encode_i, encode_j, encode_r},
         memory::Memory,
     };
