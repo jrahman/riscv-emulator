@@ -196,6 +196,18 @@ macro_rules! xor {
     };
 }
 
+macro_rules! or {
+    ($($args:tt)*) => {
+        alu!($($args)*, $crate::assembler::AluOps::OR)
+    };
+}
+
+macro_rules! and {
+    ($($args:tt)*) => {
+        alu!($($args)*, $crate::assembler::AluOps::AND)
+    };
+}
+
 macro_rules! slt {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembler::AluOps::SLT)
@@ -332,6 +344,12 @@ mod test {
 
         xor!(x6, x28, x4);
         xor!(x9, x25, 19);
+
+        or!(x19, x31, x2);
+        or!(x12, x18, 9);
+
+        and!(x8, x25, x12);
+        and!(x1, x29, 5);
 
         jal!(x5, 1234);
 

@@ -189,8 +189,9 @@ impl Hart {
 #[cfg(test)]
 mod test {
     use crate::{
+        assembler::AluOps,
         decode::{encode_b, encode_i, encode_j, encode_r},
-        memory::Memory, assembler::AluOps,
+        memory::Memory,
     };
 
     use super::{Hart, OpCode};
@@ -637,8 +638,7 @@ mod test {
         for src in 1..32 {
             for dest in (1..32).filter(|v| *v != src) {
                 for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
-                    let inst =
-                        encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLT as u8, imm);
+                    let inst = encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLT as u8, imm);
 
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
@@ -666,8 +666,7 @@ mod test {
         for src in 1..32 {
             for dest in (1..32).filter(|v| *v != src) {
                 for (reg, imm) in [(0, 100), (-100, 0), (0, 0), (1, 2), (2, 1), (-100, 100)] {
-                    let inst =
-                        encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLTU as u8, imm);
+                    let inst = encode_i(OpCode::REG_IMM as u8, dest, src, AluOps::SLTU as u8, imm);
 
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
@@ -718,7 +717,14 @@ mod test {
         for src1 in 1..32 {
             for src2 in src1 + 1..32 {
                 for dest in (1..32).filter(|v| *v != src1 && *v != src2) {
-                    let inst = encode_r(OpCode::REG_REG as u8, dest, AluOps::ADD as u8, src1, src2, 0);
+                    let inst = encode_r(
+                        OpCode::REG_REG as u8,
+                        dest,
+                        AluOps::ADD as u8,
+                        src1,
+                        src2,
+                        0,
+                    );
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
 
@@ -731,6 +737,73 @@ mod test {
                     assert_eq!(hart.regs[dest as usize], 150);
                     assert_eq!(hart.regs[src1 as usize], 50);
                     assert_eq!(hart.regs[src2 as usize], 100);
+                    assert_eq!(hart.pc, 132);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn xor_reg_reg() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for src2 in (1..32).filter(|v| *v != src1) {
+                for dest in (1..32).filter(|v| *v != src1 && *v != src2) {
+                    for (lhs, rhs) in [(0, 1), (1, 1), (-1, 1), (i32::MAX, i32::MIN)] {
+                        let inst = encode_r(
+                            OpCode::REG_REG as u8,
+                            dest,
+                            AluOps::XOR as u8,
+                            src1,
+                            src2,
+                            0,
+                        );
+                        memory.sw(128, inst as i32);
+                        hart.pc = 128;
+
+                        hart.regs[dest as usize] = 0;
+                        hart.regs[src1 as usize] = lhs;
+                        hart.regs[src2 as usize] = rhs;
+
+                        hart.execute(&mut memory);
+
+                        assert_eq!(hart.regs[dest as usize], lhs ^ rhs);
+                        assert_eq!(hart.regs[src1 as usize], lhs);
+                        assert_eq!(hart.regs[src2 as usize], rhs);
+                        assert_eq!(hart.pc, 132);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn xor_reg_imm() {
+        let mut memory = Memory::new();
+        let mut hart = Hart::new();
+
+        for src1 in 1..32 {
+            for dest in (1..32).filter(|v| *v != src1) {
+                for (lhs, rhs) in [(0, 1), (1, 1), (-1, 1), (i32::MAX, i32::MIN)] {
+                    let inst = encode_i(
+                        OpCode::REG_IMM as u8,
+                        dest,
+                        src1,
+                        AluOps::XOR as u8,
+                        rhs as i16,
+                    );
+                    memory.sw(128, inst as i32);
+                    hart.pc = 128;
+
+                    hart.regs[dest as usize] = 0;
+                    hart.regs[src1 as usize] = lhs as i32;
+
+                    hart.execute(&mut memory);
+
+                    assert_eq!(hart.regs[dest as usize], lhs ^ rhs);
+                    assert_eq!(hart.regs[src1 as usize], lhs);
                     assert_eq!(hart.pc, 132);
                 }
             }
