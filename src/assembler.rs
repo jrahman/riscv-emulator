@@ -353,8 +353,22 @@ macro_rules! ret {
 
 macro_rules! call {
     ($offset:expr) => {{
-        let mut inst = u32::from_le_bytes(auipc!(x1, (($offset) as u32 >> 20) as i32 + (($offset) as i32) & (1 << 11))) as u64;
+        let mut inst = u32::from_le_bytes(auipc!(
+            x1,
+            (($offset) as u32 >> 20) as i32 + (($offset) as i32) & (1 << 11)
+        )) as u64;
         inst |= (u32::from_le_bytes(jalr!(x1, x1, ($offset) & 0b111111111111)) as u64) << 32;
+        inst.to_le_bytes()
+    }};
+}
+
+macro_rules! tail {
+    ($offset:expr) => {{
+        let mut inst = u32::from_le_bytes(auipc!(
+            x6,
+            (($offset) as u32 >> 20) as i32 + (($offset) as i32) & (1 << 11)
+        )) as u64;
+        inst |= (u32::from_le_bytes(jalr!(x0, x6, ($offset) & 0b111111111111)) as u64) << 32;
         inst.to_le_bytes()
     }};
 }
@@ -411,7 +425,9 @@ mod test {
 
         call!(16),
 
-        ret!()
+        ret!(),
+
+        tail!(124)
         };
     }
 }
