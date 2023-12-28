@@ -274,6 +274,71 @@ macro_rules! beq {
     };
 }
 
+macro_rules! bne {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b001,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! blt {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b100,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! bge {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b101,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! bltu {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b110,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! bgeu {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_b(
+            $crate::assembler::OpCode::BRANCH as u8,
+            register!($rs1),
+            register!($rs2),
+            0b111,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
 macro_rules! seqz {
     ($rd:ident, $rs:ident) => {
         sltu!($rd, $rs, 1)
@@ -396,6 +461,11 @@ mod test {
         jal!(x5, 1234),
 
         beq!(x0, x1, 12),
+        bne!(x6, x0, 4),
+        blt!(x0, x2, 16),
+        bge!(x1, x2, 32),
+        bltu!(x7, x1, 64),
+        bgeu!(x11, x21, 128),
 
         slt!(x1, x0, 2),
         slt!(x1, x22, x20),
