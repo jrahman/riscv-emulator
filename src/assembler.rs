@@ -339,6 +339,66 @@ macro_rules! bgeu {
     };
 }
 
+macro_rules! beqz {
+    ($rs:ident, $offset:expr) => {
+        beq!($rs, x0, $offset)
+    };
+}
+
+macro_rules! bnez {
+    ($rs:ident, $offset:expr) => {
+        beq!($rs, x0, $offset)
+    };
+}
+
+macro_rules! blez {
+    ($rs:ident, $offset:expr) => {
+        bge!(x0, $rs, $offset)
+    };
+}
+
+macro_rules! bgez {
+    ($rs:ident, $offset:expr) => {
+        bge!($rs, x0, $offset)
+    };
+}
+
+macro_rules! bltz {
+    ($rs:ident, $offset:expr) => {
+        blt!($rs, x0, $offset)
+    };
+}
+
+macro_rules! bgtz {
+    ($rs:ident, $offset:expr) => {
+        blt!(x0, $rs, $offset)
+    };
+}
+
+macro_rules! bgt {
+    ($rs:ident, $rt:ident, $offset:expr) => {
+        blt!($rt, $rs, $offset)
+    }
+}
+
+macro_rules! ble {
+    ($rs:ident, $rt:ident, $offset:expr) => {
+        bge!($rt, $rs, $offset)
+    }
+}
+
+macro_rules! bgtu {
+    ($rs:ident, $rt:ident, $offset:expr) => {
+        bltu!($rt, $rs, $offset)
+    }
+}
+
+macro_rules! bleu {
+    ($rs:ident, $rt:ident, $offset:expr) => {
+        bgeu!($rt, $rs, $offset)
+    }
+}
+
 macro_rules! seqz {
     ($rd:ident, $rs:ident) => {
         sltu!($rd, $rs, 1)
@@ -467,9 +527,20 @@ mod test {
         bltu!(x7, x1, 64),
         bgeu!(x11, x21, 128),
 
+        beqz!(x1, 12),
+        bnez!(x6, 4),
+        blez!(x2, 16),
+        bgez!(x2, 32),
+        bltz!(x1, 64),
+        bgtz!(x21, 128),
+
+        bgt!(x0, x1, 12),
+        ble!(x6, x0, 4),
+        bgtu!(x0, x2, 16),
+        bleu!(x1, x2, 32),
+
         slt!(x1, x0, 2),
         slt!(x1, x22, x20),
-
         sltu!(x1, x0, 2),
         sltu!(x1, x22, x20),
 
@@ -477,7 +548,6 @@ mod test {
 
         seqz!(x1, x2),
         sneqz!(x2, x17),
-
         sltz!(x29, x4),
         sgtz!(x23, x11),
 
@@ -486,7 +556,6 @@ mod test {
         nop!(),
 
         not!(x5, x12),
-
         neg!(x1, x27),
 
         j!(1028),
