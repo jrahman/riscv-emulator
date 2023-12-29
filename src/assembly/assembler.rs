@@ -48,30 +48,64 @@ pub enum AluOps {
     AND = 0b111,
     SLL = 0b001,
     SR = 0b101,
+
 }
 
 macro_rules! alu {
-    ($dest:ident, $src1:ident, $src2:ident, $op:expr) => {
+    ($rd:ident, $rs1:ident, $rs2:ident, $op:expr) => {
         $crate::decode::encode_r(
             $crate::assembly::assembler::OpCode::REG_REG as u8,
-            $crate::register!($dest),
+            $crate::register!($rd),
             $op as u8,
-            $crate::register!($src1),
-            $crate::register!($src2),
+            $crate::register!($rs1),
+            $crate::register!($rs2),
             0,
         )
         .to_le_bytes()
     };
-    ($dest:ident, $src1:ident, $imm:expr, $op:expr) => {
+    ($rd:ident, $rs1:ident, $imm:expr, $op:expr) => {
         $crate::decode::encode_i(
             $crate::assembly::assembler::OpCode::REG_IMM as u8,
-            $crate::register!($dest),
-            $crate::register!($src1),
+            $crate::register!($rd),
+            $crate::register!($rs1),
             $op as u8,
             $imm,
         )
         .to_le_bytes()
     };
+}
+
+macro_rules! sw {
+    ($rs1:ident, $rs2:ident, $offset:expr) => {
+        $crate::decode::encode_s(
+            $crate::assembly::assembler::OpCode::STORE as u8,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            0b010,
+            $offset,
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! lw {
+    ($rd:ident, $rs:ident, $offset:expr) => {
+        $crate::decode::encode_i(
+            $crate::assembly::assembler::OpCode::LOAD as u8,
+            $crate::register!($rd),
+            $crate::register!($rs),
+            0b010,
+            $offset,
+        ).to_le_bytes()
+    };
+}
+
+macro_rules! li {
+    ($rd:ident, $imm:expr) => {{
+        let mut inst = u32::from_le_bytes(lui!($rd, $imm)) as u64;
+        inst |= (u32::from_le_bytes(add!($rd, x0, $imm)) as u64) << 32;
+        inst.to_le_bytes()
+    }}
 }
 
 macro_rules! add {
@@ -80,15 +114,39 @@ macro_rules! add {
     };
 }
 
-macro_rules! sub {
-    ($dest:ident, $src1:ident, $src2:ident) => {
+macro_rules! sra {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
         $crate::decode::encode_r(
             $crate::assembly::assembler::OpCode::REG_REG as u8,
-            $crate::register!($dest),
+            $crate::register!($rd),
+            $crate::assembly::assembler::AluOps::SR as u8,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            (1u8 << 7),
+        )
+        .to_le_bytes()
+    };
+    ($rd:ident, $rs1:ident, $imm:expr) => {
+        $crate::decode::encode_i(
+            $crate::assembly::assembler::OpCode::REG_IMM as u8,
+            $crate::register!($rd),
+            $crate::register!($rs1),
+            AluOps::SR,
+            ($imm & 0b1111) | (1 << 11),
+        )
+        .to_le_bytes()
+    };
+}
+
+macro_rules! sub {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
+        $crate::decode::encode_r(
+            $crate::assembly::assembler::OpCode::REG_REG as u8,
+            $crate::register!($rd),
             // SUB and ADD are same opcode but with different funct7 value
             $crate::assembly::assembler::AluOps::ADD as u8,
-            $crate::register!($src1),
-            $crate::register!($src2),
+            $crate::register!($rs1),
+            $crate::register!($rs2),
             0b0100000,
         )
         .to_le_bytes()
@@ -330,8 +388,8 @@ macro_rules! sgtz {
 }
 
 macro_rules! mv {
-    ($dest:ident, $src1:ident) => {
-        add!($dest, $src1, 0)
+    ($rd:ident, $rs1:ident) => {
+        add!($rd, $rs1, 0)
     };
 }
 
@@ -362,6 +420,17 @@ macro_rules! auipc {
         )
         .to_le_bytes()
     };
+}
+
+macro_rules! lui {
+    ($rd:ident, $imm:expr) => {
+        $crate::decode::encode_u(
+            $crate::assembly::assembler::OpCode::LUI as u8,
+            $crate::register!($rd),
+            ($imm) as u32 as i32,
+        )
+        .to_le_bytes()
+    }
 }
 
 macro_rules! j {

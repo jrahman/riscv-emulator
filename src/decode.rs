@@ -61,6 +61,15 @@ pub fn decode_s(inst: u32) -> (u8, u8, u8, u8, i16) {
     )
 }
 
+pub fn encode_s(opcode: u8, funct3: u8, rs1: u8, rs2: u8, imm: i16) -> u32 {
+    (opcode as u32 & 127)
+        | ((imm as u32 & 0b11111) << 7)
+        | ((funct3 as u32 & 0b111) << 12)
+        | ((rs1 as u32 & 31) << 15)
+        | ((rs2 as u32 & 31) << 20)
+        | ((imm as u32 & 127) << 25)
+}
+
 /// Instruction encoding for a Upper immediate instruction which is used for
 /// LUI and AUIPC instructions to build constants. Contains pieces of the
 /// immediate along with the destination register:
@@ -77,7 +86,7 @@ pub fn decode_u(inst: u32) -> (u8, u8, i32) {
 }
 
 pub fn encode_u(opcode: u8, rd: u8, imm: i32) -> u32 {
-    (opcode as u32 & 127) | ((rd as u32 & 31) << 7) | ((imm as u32 & 0b11111111111111111111) << 12)
+    (opcode as u32 & 127) | ((rd as u32 & 31) << 7) | (imm as u32 & 0b11111111111111111111000000000000)
 }
 
 /// Instruction encoding for Reg-Imm instructions that encodes a dest register,
