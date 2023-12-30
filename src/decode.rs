@@ -86,7 +86,9 @@ pub fn decode_u(inst: u32) -> (u8, u8, i32) {
 }
 
 pub fn encode_u(opcode: u8, rd: u8, imm: i32) -> u32 {
-    (opcode as u32 & 127) | ((rd as u32 & 31) << 7) | (imm as u32 & 0b11111111111111111111000000000000)
+    (opcode as u32 & 127)
+        | ((rd as u32 & 31) << 7)
+        | (imm as u32 & 0b11111111111111111111000000000000)
 }
 
 /// Instruction encoding for Reg-Imm instructions that encodes a dest register,

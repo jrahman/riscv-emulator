@@ -12,6 +12,11 @@ impl Memory {
         }
     }
 
+    pub fn load_program(&mut self, base_addr: u32, program: &[u8]) {
+        self.physical_memory[base_addr as usize..base_addr as usize + program.len()]
+            .copy_from_slice(program);
+    }
+
     pub fn lw(&self, addr: u32) -> i32 {
         let addr = addr as usize;
         i32::from_le_bytes(self.physical_memory[addr..addr + 4].try_into().unwrap())

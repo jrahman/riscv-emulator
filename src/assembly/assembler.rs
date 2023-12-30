@@ -8,6 +8,7 @@ macro_rules! asm {
     }};
 }
 
+#[derive(Debug)]
 #[repr(u8)]
 pub enum OpCode {
     LOAD = 3,
@@ -19,6 +20,7 @@ pub enum OpCode {
     BRANCH = 99,
     JALR = 103,
     JAL = 111,
+    SYSTEM = 0b1110011,
 }
 
 impl From<u8> for OpCode {
@@ -33,7 +35,8 @@ impl From<u8> for OpCode {
             99 => Self::BRANCH,
             103 => Self::JALR,
             111 => Self::JAL,
-            _ => panic!(),
+            0b1110011 => Self::SYSTEM,
+            _ => panic!("Invalid OpCode: {}", value),
         }
     }
 }
@@ -48,7 +51,6 @@ pub enum AluOps {
     AND = 0b111,
     SLL = 0b001,
     SR = 0b101,
-
 }
 
 macro_rules! alu {
@@ -96,7 +98,8 @@ macro_rules! lw {
             $crate::register!($rs),
             0b010,
             $offset,
-        ).to_le_bytes()
+        )
+        .to_le_bytes()
     };
 }
 
@@ -105,7 +108,7 @@ macro_rules! li {
         let mut inst = u32::from_le_bytes(lui!($rd, $imm)) as u64;
         inst |= (u32::from_le_bytes(add!($rd, x0, $imm)) as u64) << 32;
         inst.to_le_bytes()
-    }}
+    }};
 }
 
 macro_rules! add {
@@ -430,7 +433,7 @@ macro_rules! lui {
             ($imm) as u32 as i32,
         )
         .to_le_bytes()
-    }
+    };
 }
 
 macro_rules! j {
@@ -471,6 +474,19 @@ macro_rules! tail {
         inst |= (u32::from_le_bytes(jalr!(x0, x6, ($offset) & 0b111111111111)) as u64) << 32;
         inst.to_le_bytes()
     }};
+}
+
+macro_rules! ebreak {
+    () => {
+        $crate::decode::encode_i(
+            $crate::assembly::assembler::OpCode::SYSTEM as u8,
+            0,
+            0,
+            0,
+            0b000000000001,
+        )
+        .to_le_bytes()
+    };
 }
 
 #[cfg(test)]

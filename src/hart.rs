@@ -10,6 +10,8 @@ pub struct Hart {
 
     // Array of all 32 General purpose registers. For uniformity, we include x0 in the array, but handle it specially on access
     regs: [i32; 32],
+
+    running: bool,
 }
 
 impl Hart {
@@ -17,7 +19,16 @@ impl Hart {
         Self {
             pc: 0,
             regs: [0; 32],
+            running: true,
         }
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.running
+    }
+
+    pub fn set_pc(&mut self, pc: u32) {
+        self.pc = pc;
     }
 
     // Execute a single instruction at the current program counter (PC) address
@@ -26,6 +37,11 @@ impl Hart {
 
         // Assuming a 32-bit instruction, extract the opcode from the first 6 bits
         let opcode = OpCode::from((inst & 127) as u8);
+
+        println!(
+            "Running next instruction, pc: {}, inst: {}, opcode: {:?}",
+            self.pc, inst, opcode
+        );
 
         let mut next_pc = self.pc + 4;
 
@@ -177,6 +193,18 @@ impl Hart {
                 next_pc = (self.pc as i32 + offset) as u32;
                 // TODO Address alignment check
                 self.regs[0] = 0;
+            },
+            OpCode::SYSTEM => {
+                let (_, _, _, _, imm) = decode_i(inst);
+                match imm {
+                    // EBREAK
+                    0b000000000001 => {
+                        self.running = false;
+                    },
+                    _ => {
+                        panic!()
+                    }
+                }
             }
             _ => (),
         }
