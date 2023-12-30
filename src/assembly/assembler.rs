@@ -83,9 +83,9 @@ macro_rules! sw {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_s(
             $crate::assembly::assembler::OpCode::STORE as u8,
+            0b010,
             $crate::register!($rs1),
             $crate::register!($rs2),
-            0b010,
             $offset,
         )
         .to_le_bytes()
@@ -109,8 +109,10 @@ macro_rules! lw {
 #[macro_export]
 macro_rules! li {
     ($rd:ident, $imm:expr) => {{
-        let mut inst = u32::from_le_bytes(lui!($rd, $imm)) as u64;
-        inst |= (u32::from_le_bytes(add!($rd, x0, $imm)) as u64) << 32;
+        let imm = $imm;
+        let bias = (imm & (1 << 11)) >> 11;
+        let mut inst = u32::from_le_bytes(lui!($rd, (imm >> 12) + bias)) as u64;
+        inst |= (u32::from_le_bytes(add!($rd, $rd, imm as i16)) as u64) << 32;
         inst.to_le_bytes()
     }};
 }

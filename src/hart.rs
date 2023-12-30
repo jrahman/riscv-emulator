@@ -42,6 +42,7 @@ impl Hart {
         // Assuming a 32-bit instruction, extract the opcode from the first 6 bits
         let opcode = OpCode::from((inst & 127) as u8);
 
+        #[cfg(test)]
         println!(
             "Running next instruction, pc: {}, inst: {}, opcode: {:?}",
             self.pc, inst, opcode
