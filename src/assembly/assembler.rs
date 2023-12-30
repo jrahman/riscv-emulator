@@ -53,6 +53,7 @@ pub enum AluOps {
     SR = 0b101,
 }
 
+#[macro_export]
 macro_rules! alu {
     ($rd:ident, $rs1:ident, $rs2:ident, $op:expr) => {
         $crate::decode::encode_r(
@@ -77,6 +78,7 @@ macro_rules! alu {
     };
 }
 
+#[macro_export]
 macro_rules! sw {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_s(
@@ -90,6 +92,7 @@ macro_rules! sw {
     };
 }
 
+#[macro_export]
 macro_rules! lw {
     ($rd:ident, $rs:ident, $offset:expr) => {
         $crate::decode::encode_i(
@@ -103,6 +106,7 @@ macro_rules! lw {
     };
 }
 
+#[macro_export]
 macro_rules! li {
     ($rd:ident, $imm:expr) => {{
         let mut inst = u32::from_le_bytes(lui!($rd, $imm)) as u64;
@@ -111,12 +115,14 @@ macro_rules! li {
     }};
 }
 
+#[macro_export]
 macro_rules! add {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::ADD)
     };
 }
 
+#[macro_export]
 macro_rules! sra {
     ($rd:ident, $rs1:ident, $rs2:ident) => {
         $crate::decode::encode_r(
@@ -141,6 +147,7 @@ macro_rules! sra {
     };
 }
 
+#[macro_export]
 macro_rules! sub {
     ($rd:ident, $rs1:ident, $rs2:ident) => {
         $crate::decode::encode_r(
@@ -156,36 +163,42 @@ macro_rules! sub {
     };
 }
 
+#[macro_export]
 macro_rules! xor {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::XOR)
     };
 }
 
+#[macro_export]
 macro_rules! or {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::OR)
     };
 }
 
+#[macro_export]
 macro_rules! and {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::AND)
     };
 }
 
+#[macro_export]
 macro_rules! slt {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::SLT)
     };
 }
 
+#[macro_export]
 macro_rules! sltu {
     ($($args:tt)*) => {
         alu!($($args)*, $crate::assembly::assembler::AluOps::SLTU)
     };
 }
 
+#[macro_export]
 macro_rules! jal {
     ($rd:ident, $offset:expr) => {
         $crate::decode::encode_j(
@@ -205,6 +218,7 @@ macro_rules! jal {
     };
 }
 
+#[macro_export]
 macro_rules! jalr {
     ($rd:ident, $rs1:ident, $offset:expr) => {
         $crate::decode::encode_i(
@@ -228,6 +242,7 @@ macro_rules! jalr {
     };
 }
 
+#[macro_export]
 macro_rules! beq {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -241,6 +256,7 @@ macro_rules! beq {
     };
 }
 
+#[macro_export]
 macro_rules! bne {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -254,6 +270,7 @@ macro_rules! bne {
     };
 }
 
+#[macro_export]
 macro_rules! blt {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -267,6 +284,7 @@ macro_rules! blt {
     };
 }
 
+#[macro_export]
 macro_rules! bge {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -280,6 +298,7 @@ macro_rules! bge {
     };
 }
 
+#[macro_export]
 macro_rules! bltu {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -293,6 +312,7 @@ macro_rules! bltu {
     };
 }
 
+#[macro_export]
 macro_rules! bgeu {
     ($rs1:ident, $rs2:ident, $offset:expr) => {
         $crate::decode::encode_b(
@@ -306,114 +326,133 @@ macro_rules! bgeu {
     };
 }
 
+#[macro_export]
 macro_rules! beqz {
     ($rs:ident, $offset:expr) => {
         beq!($rs, x0, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bnez {
     ($rs:ident, $offset:expr) => {
         beq!($rs, x0, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! blez {
     ($rs:ident, $offset:expr) => {
         bge!(x0, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bgez {
     ($rs:ident, $offset:expr) => {
         bge!($rs, x0, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bltz {
     ($rs:ident, $offset:expr) => {
         blt!($rs, x0, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bgtz {
     ($rs:ident, $offset:expr) => {
         blt!(x0, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bgt {
     ($rs:ident, $rt:ident, $offset:expr) => {
         blt!($rt, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! ble {
     ($rs:ident, $rt:ident, $offset:expr) => {
         bge!($rt, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bgtu {
     ($rs:ident, $rt:ident, $offset:expr) => {
         bltu!($rt, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! bleu {
     ($rs:ident, $rt:ident, $offset:expr) => {
         bgeu!($rt, $rs, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! seqz {
     ($rd:ident, $rs:ident) => {
         sltu!($rd, $rs, 1)
     };
 }
 
+#[macro_export]
 macro_rules! sneqz {
     ($rd:ident, $rs:ident) => {
         sltu!($rd, x0, $rs)
     };
 }
 
+#[macro_export]
 macro_rules! sltz {
     ($rd:ident, $rs:ident) => {
         slt!($rd, $rs, x0)
     };
 }
 
+#[macro_export]
 macro_rules! sgtz {
     ($rd:ident, $rs:ident) => {
         slt!($rd, x0, $rs)
     };
 }
 
+#[macro_export]
 macro_rules! mv {
     ($rd:ident, $rs1:ident) => {
         add!($rd, $rs1, 0)
     };
 }
 
+#[macro_export]
 macro_rules! nop {
     () => {
         add!(x0, x0, 0)
     };
 }
 
+#[macro_export]
 macro_rules! not {
     ($rd:ident, $rs:ident) => {
         xor!($rd, $rs, -1)
     };
 }
 
+#[macro_export]
 macro_rules! neg {
     ($rd:ident, $rs:ident) => {
         sub!($rd, x0, $rs)
     };
 }
 
+#[macro_export]
 macro_rules! auipc {
     ($rd:ident, $offset:expr) => {
         $crate::decode::encode_u(
@@ -425,6 +464,7 @@ macro_rules! auipc {
     };
 }
 
+#[macro_export]
 macro_rules! lui {
     ($rd:ident, $imm:expr) => {
         $crate::decode::encode_u(
@@ -436,24 +476,28 @@ macro_rules! lui {
     };
 }
 
+#[macro_export]
 macro_rules! j {
     ($offset:expr) => {
         jal!(x0, $offset)
     };
 }
 
+#[macro_export]
 macro_rules! jr {
     ($rs1:ident) => {
         jalr!(x0, $rs1, 0)
     };
 }
 
+#[macro_export]
 macro_rules! ret {
     () => {
         jalr!(x0, x1, 0)
     };
 }
 
+#[macro_export]
 macro_rules! call {
     ($offset:expr) => {{
         let mut inst = u32::from_le_bytes(auipc!(
@@ -465,6 +509,7 @@ macro_rules! call {
     }};
 }
 
+#[macro_export]
 macro_rules! tail {
     ($offset:expr) => {{
         let mut inst = u32::from_le_bytes(auipc!(
@@ -476,6 +521,7 @@ macro_rules! tail {
     }};
 }
 
+#[macro_export]
 macro_rules! ebreak {
     () => {
         $crate::decode::encode_i(
