@@ -299,13 +299,8 @@ mod test {
                         (i32::MIN, i32::MAX),
                         (i32::MAX, i32::MIN),
                     ] {
-                        let inst = encode_b(
-                            OpCode::BRANCH as u8,
-                            rs1,
-                            rs2,
-                            0b000, /* BEQ */
-                            offset,
-                        );
+                        let inst =
+                            encode_b(OpCode::BRANCH as u8, rs1, rs2, 0b000 /* BEQ */, offset);
                         memory.sw(4096, inst as i32);
                         hart.pc = 4096;
 
@@ -355,13 +350,8 @@ mod test {
                         (i32::MIN, i32::MAX),
                         (i32::MAX, i32::MIN),
                     ] {
-                        let inst = encode_b(
-                            OpCode::BRANCH as u8,
-                            rs1,
-                            rs2,
-                            0b001, /* BNE */
-                            offset,
-                        );
+                        let inst =
+                            encode_b(OpCode::BRANCH as u8, rs1, rs2, 0b001 /* BNE */, offset);
                         memory.sw(4096, inst as i32);
                         hart.pc = 4096;
 
@@ -411,13 +401,8 @@ mod test {
                         (i32::MIN, i32::MAX),
                         (i32::MAX, i32::MIN),
                     ] {
-                        let inst = encode_b(
-                            OpCode::BRANCH as u8,
-                            rs1,
-                            rs2,
-                            0b100, /* BLT */
-                            offset,
-                        );
+                        let inst =
+                            encode_b(OpCode::BRANCH as u8, rs1, rs2, 0b100 /* BLT */, offset);
                         memory.sw(4096, inst as i32);
                         hart.pc = 4096;
 
@@ -467,13 +452,8 @@ mod test {
                         (i32::MIN, i32::MAX),
                         (i32::MAX, i32::MIN),
                     ] {
-                        let inst = encode_b(
-                            OpCode::BRANCH as u8,
-                            rs1,
-                            rs2,
-                            0b101, /* BGE */
-                            offset,
-                        );
+                        let inst =
+                            encode_b(OpCode::BRANCH as u8, rs1, rs2, 0b101 /* BGE */, offset);
                         memory.sw(4096, inst as i32);
                         hart.pc = 4096;
 
@@ -749,14 +729,8 @@ mod test {
         for rs1 in 1..32 {
             for rs2 in rs1 + 1..32 {
                 for dest in (1..32).filter(|v| *v != rs1 && *v != rs2) {
-                    let inst = encode_r(
-                        OpCode::REG_REG as u8,
-                        dest,
-                        AluOps::ADD as u8,
-                        rs1,
-                        rs2,
-                        0,
-                    );
+                    let inst =
+                        encode_r(OpCode::REG_REG as u8, dest, AluOps::ADD as u8, rs1, rs2, 0);
                     memory.sw(128, inst as i32);
                     hart.pc = 128;
 
@@ -784,14 +758,8 @@ mod test {
             for rs2 in (1..32).filter(|v| *v != rs1) {
                 for dest in (1..32).filter(|v| *v != rs1 && *v != rs2) {
                     for (lhs, rhs) in [(0, 1), (1, 1), (-1, 1), (i32::MAX, i32::MIN)] {
-                        let inst = encode_r(
-                            OpCode::REG_REG as u8,
-                            dest,
-                            AluOps::XOR as u8,
-                            rs1,
-                            rs2,
-                            0,
-                        );
+                        let inst =
+                            encode_r(OpCode::REG_REG as u8, dest, AluOps::XOR as u8, rs1, rs2, 0);
                         memory.sw(128, inst as i32);
                         hart.pc = 128;
 
