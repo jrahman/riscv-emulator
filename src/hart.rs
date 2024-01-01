@@ -125,39 +125,51 @@ impl Hart {
                 let (_, rd, rs1, rs2, funct3, funct7) = decode_r(inst);
                 let rs1 = self.regs[rs1 as usize];
                 let rs2 = self.regs[rs2 as usize];
-                self.regs[rd as usize] = match funct3 {
-                    0 /* ADD/SUB */ => {
+                self.regs[rd as usize] = match (funct3, funct7) {
+                    (0, 0) /* ADD/SUB */ => {
                         if funct7 == 0 {
                             rs1 + rs2
                         } else {
                             rs1 - rs2
                         }
                     },
-                    1 /* SLL */ => {
+                    (1, 0) /* SLL */ => {
                         rs1 << (rs2 & 31)
                     },
-                    2 /* SLT */ => {
+                    (2, 0) /* SLT */ => {
                         if rs1 < rs2 { 1 } else { 0 }
                     },
-                    3 /* SLTU */ => {
+                    (3, 0) /* SLTU */ => {
                         if (rs1 as u32) < rs2 as u32 { 1 } else { 0 }
                     },
-                    4 /* XOR */ => {
+                    (4, 0) /* XOR */ => {
                         rs1 ^ rs2
                     },
-                    5 /* SR* */ => {
+                    (5, 0) /* SR* */ => {
                         if funct7 == 0 {
                             ((rs1 as u32) >> (rs2 & 31)) as i32
                         } else {
                             rs1 >> (rs2 & 31)
                         }
                     },
-                    6 /* OR */=> {
+                    (6, 0) /* OR */=> {
                         rs1 | rs2
                     },
-                    7 /* AND */ => {
+                    (7, 0) /* AND */ => {
                         rs1 & rs2
                     },
+                    (0b000, 0b0000001) /* MUL */ => {
+                        ((rs1 as i64 * rs2 as i64) & ((1<<32) - 1)) as i32
+                    },
+                    (0b001, 0b0000001) /* MULH */ => {
+                        (((rs1 as i64 * rs2 as i64) >> 32) & ((1<<32) - 1)) as i32
+                    },
+                    (0b010, 0b0000001) /* MULHSU */ => {
+                        (((rs1 as i64 * rs2 as u64) >> 32) & ((1<<32) - 1)) as i32
+                    },
+                    (0b011, 0b0000001) /* MULHU */ => {
+                        (((rs1 as u64 * rs2 as u64) >> 32) & ((1<<32) - 1)) as i32
+                    }
                     _ => panic!()
                 };
                 self.regs[0] = 0;

@@ -537,9 +537,64 @@ macro_rules! ebreak {
     };
 }
 
+#[macro_export]
+macro_rules! mul {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
+        $crate::decode::encode_r(
+            $crate::assembly::assembler::OpCode::REG_REG as u8,
+            $crate::register!($rd),
+            0b000,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            0b0000001
+        ).to_le_bytes()
+    }
+}
+
+#[macro_export]
+macro_rules! mulh {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
+        $crate::decode::encode_r(
+            $crate::assembly::assembler::OpCode::REG_REG as u8,
+            $crate::register!($rd),
+            0b001,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            0b0000001
+        ).to_le_bytes()
+    }
+}
+
+#[macro_export]
+macro_rules! mulhu {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
+        $crate::decode::encode_r(
+            $crate::assembly::assembler::OpCode::REG_REG as u8,
+            $crate::register!($rd),
+            0b011,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            0b0000001
+        ).to_le_bytes()
+    }
+}
+
+#[macro_export]
+macro_rules! mulhsu {
+    ($rd:ident, $rs1:ident, $rs2:ident) => {
+        $crate::decode::encode_r(
+            $crate::assembly::assembler::OpCode::REG_REG as u8,
+            $crate::register!($rd),
+            0b010,
+            $crate::register!($rs1),
+            $crate::register!($rs2),
+            0b0000001
+        ).to_le_bytes()
+    }
+}
+
 #[cfg(test)]
 mod test {
-
     /// Validate the macros expand as required in a simple test case, check for
     /// both Reg-Imm and Reg-Reg forms of 3 Reg instructions
     #[test]
@@ -605,7 +660,11 @@ mod test {
 
         ret!(),
 
-        tail!(124)
+        tail!(124),
+        mul!(x5, x2, x21),
+        mulh!(x5, x8, x11),
+        mulhu!(x7, x31, x17),
+        mulhsu!(x23, x10, x14)
         };
     }
 }
