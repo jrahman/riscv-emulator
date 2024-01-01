@@ -11,15 +11,15 @@ macro_rules! asm {
 #[derive(Debug)]
 #[repr(u8)]
 pub enum OpCode {
-    LOAD = 3,
-    REG_IMM = 19,
-    AUIPC = 23,
-    STORE = 35,
-    REG_REG = 51,
-    LUI = 55,
-    BRANCH = 99,
-    JALR = 103,
-    JAL = 111,
+    LOAD = 0b0000011,
+    REG_IMM = 0b0010011,
+    AUIPC = 0b0010111,
+    STORE = 0b0100011,
+    REG_REG = 0b0110011,
+    LUI = 0b0110111,
+    BRANCH = 0b1100011,
+    JALR = 0b1100111,
+    JAL = 0b1101111,
     SYSTEM = 0b1110011,
 }
 
