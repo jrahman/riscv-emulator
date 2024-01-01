@@ -26,15 +26,15 @@ pub enum OpCode {
 impl From<u8> for OpCode {
     fn from(value: u8) -> Self {
         match value {
-            3 => Self::LOAD,
-            19 => Self::REG_IMM,
-            23 => Self::AUIPC,
-            35 => Self::STORE,
-            51 => Self::REG_REG,
-            55 => Self::LUI,
-            99 => Self::BRANCH,
-            103 => Self::JALR,
-            111 => Self::JAL,
+            0b0000011 => Self::LOAD,
+            0b0010011 => Self::REG_IMM,
+            0b0010111 => Self::AUIPC,
+            0b0100011 => Self::STORE,
+            0b0110011 => Self::REG_REG,
+            0b0110111 => Self::LUI,
+            0b1100011 => Self::BRANCH,
+            0b1100111 => Self::JALR,
+            0b1101111 => Self::JAL,
             0b1110011 => Self::SYSTEM,
             _ => panic!("Invalid OpCode: {}", value),
         }
